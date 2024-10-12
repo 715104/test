@@ -1,0 +1,465 @@
+<html>
+<head>
+    <title>Sorting Algorithms Visualizer</title>
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <style>
+        .bar {
+            transition: height 0.3s ease, background-color 0.3s ease;
+        }
+        .dark-mode {
+            background-color: #1e293b;
+            color: #cbd5e1;
+        }
+        .light-mode {
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const App = () => {
+            const [array, setArray] = useState([]);
+            const [size, setSize] = useState(30);
+            const [speed, setSpeed] = useState(50);
+            const [isSorting, setIsSorting] = useState(false);
+            const [isPaused, setIsPaused] = useState(false);
+            const [algorithm, setAlgorithm] = useState('Bubble Sort');
+            const [sortedIndices, setSortedIndices] = useState([]);
+            const [transitionIndices, setTransitionIndices] = useState([]);
+            const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
+            const intervalRef = useRef(null);
+
+            useEffect(() => {
+                generateNewArray();
+            }, [size]);
+
+            useEffect(() => {
+                if (isSorting && !isPaused) {
+                    clearInterval(intervalRef.current);
+                    startSorting();
+                }
+            }, [speed]);
+
+            // Dark mode persistence
+            useEffect(() => {
+                localStorage.setItem('darkMode', isDarkMode);
+            }, [isDarkMode]);
+
+            const generateNewArray = () => {
+                const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * 100) + 50);
+                setArray(newArray);
+                setSortedIndices([]);
+                setTransitionIndices([]);
+            };
+
+            const toggleDarkMode = () => {
+                setIsDarkMode(!isDarkMode);
+            };
+
+            const isSorted = (arr) => {
+                for (let i = 0; i < arr.length - 1; i++) {
+                    if (arr[i] > arr[i + 1]) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            const startSorting = () => {
+    if (isSorted(array)) {
+        alert("Array is already sorted!");
+        return;
+    }
+    setIsSorting(true);
+    setIsPaused(false);
+    switch (algorithm) {
+                    case 'Bubble Sort':
+                        bubbleSort();
+                        break;
+                    case 'Insertion Sort':
+                        insertionSort();
+                        break;
+                    case 'Selection Sort':
+                        selectionSort();
+                        break;
+                    case 'Merge Sort':
+                        mergeSort();
+                        break;
+                    case 'Quick Sort':
+                        quickSort();
+                        break;
+                    case 'Heap Sort':
+                        heapSort();
+                        break;
+                    case 'Shell Sort':
+                        shellSort();
+                        break;
+                    default:
+                        break;
+                }
+            };
+
+            const pauseSorting = () => {
+                setIsPaused(true);
+                clearInterval(intervalRef.current);
+            };
+
+            const resumeSorting = () => {
+                setIsPaused(false);
+                startSorting();
+            };
+
+            const resetSorting = () => {
+                setIsSorting(false);
+                setIsPaused(false);
+                clearInterval(intervalRef.current);
+                generateNewArray();
+            };
+
+            const handleSizeChange = (e) => {
+                setSize(e.target.value);
+            };
+
+            const handleSpeedChange = (e) => {
+                setSpeed(e.target.value);
+            };
+
+            const handleAlgorithmChange = (e) => {
+                setAlgorithm(e.target.value);
+            };
+			
+            const bubbleSort = () => {
+                let arr = [...array];
+                let n = arr.length;
+                let i = 0;
+                let j = 0;
+
+                intervalRef.current = setInterval(() => {
+                    if (i < n) {
+                        if (j < n - i - 1) {
+                            setTransitionIndices([j, j + 1]);
+                            if (arr[j] > arr[j + 1]) {
+                                let temp = arr[j];
+                                arr[j] = arr[j + 1];
+                                arr[j + 1] = temp;
+                                setArray([...arr]);
+                            }
+                            j++;
+                        } else {
+                            setSortedIndices((prev) => [...prev, n - i - 1]);
+                            j = 0;
+                            i++;
+                        }
+                    } else {
+                        setSortedIndices((prev) => [...prev, 0]);
+                        clearInterval(intervalRef.current);
+                        setIsSorting(false);
+                    }
+                }, 200 - speed * 2);
+            };
+
+            const insertionSort = () => {
+                let arr = [...array];
+                let n = arr.length;
+                let i = 1;
+                let j = 0;
+
+                intervalRef.current = setInterval(() => {
+                    if (i < n) {
+                        let key = arr[i];
+                        j = i - 1;
+                        while (j >= 0 && arr[j] > key) {
+                            setTransitionIndices([j, j + 1]);
+                            arr[j + 1] = arr[j];
+                            j = j - 1;
+                        }
+                        arr[j + 1] = key;
+                        setArray([...arr]);
+                        setSortedIndices((prev) => [...prev, i]);
+                        i++;
+                    } else {
+                        setSortedIndices((prev) => [...prev, 0]);
+                        clearInterval(intervalRef.current);
+                        setIsSorting(false);
+                    }
+                }, 200 - speed * 2);
+            };
+
+            const selectionSort = () => {
+    let arr = [...array];
+    let n = arr.length;
+    let i = 0;
+    let minIdx = 0;
+
+    intervalRef.current = setInterval(() => {
+        if (i < n - 1) {
+            minIdx = i;
+            for (let j = i + 1; j < n; j++) {
+                setTransitionIndices([minIdx, j]); // Highlight the current comparison
+                if (arr[j] < arr[minIdx]) {
+                    minIdx = j;
+                }
+            }
+            if (minIdx !== i) {
+                let temp = arr[minIdx];
+                arr[minIdx] = arr[i];
+                arr[i] = temp;
+                setArray([...arr]);
+            }
+            setSortedIndices((prev) => [...prev, i]);
+            i++;
+        } else {
+            setSortedIndices((prev) => [...prev, n - 1]);
+            clearInterval(intervalRef.current);
+            setIsSorting(false);
+        }
+    }, 200 - speed * 2);  // Adjust speed for visual effect
+};
+
+
+            const mergeSort = () => {
+    let arr = [...array];
+    let n = arr.length;
+    let step = 1;
+    let left = 0;
+    let right = 0;
+    let end = 0;
+
+    const merge = (start, mid, end) => {
+        let left = arr.slice(start, mid);
+        let right = arr.slice(mid, end);
+        let i = 0, j = 0, k = start;
+
+        while (i < left.length && j < right.length) {
+            if (left[i] <= right[j]) {
+                arr[k] = left[i];
+                i++;
+            } else {
+                arr[k] = right[j];
+                j++;
+            }
+            k++;
+        }
+
+        while (i < left.length) {
+            arr[k] = left[i];
+            i++;
+            k++;
+        }
+
+        while (j < right.length) {
+            arr[k] = right[j];
+            j++;
+            k++;
+        }
+    };
+
+    intervalRef.current = setInterval(() => {
+        if (step < n) {
+            if (left < n - step) {
+                right = left + step;
+                end = Math.min(left + step * 2, n);
+                merge(left, right, end);
+                setArray([...arr]);
+                setTransitionIndices([left, right, end]);
+                left += step * 2;
+            } else {
+                step *= 2;
+                left = 0;
+            }
+        } else {
+            clearInterval(intervalRef.current);
+            setIsSorting(false);
+            setSortedIndices(Array.from({ length: n }, (_, i) => i));
+        }
+    }, 200 - speed * 2);
+};
+
+            const quickSort = async () => {
+                let arr = [...array];
+                let n = arr.length;
+
+                const quickSortHelper = async (arr, low, high) => {
+                    if (low < high) {
+                        let pi = await partition(arr, low, high);
+                        await quickSortHelper(arr, low, pi - 1);
+                        await quickSortHelper(arr, pi + 1, high);
+                    }
+                };
+
+                const partition = async (arr, low, high) => {
+                    let pivot = arr[high];
+                    let i = low - 1;
+
+                    for (let j = low; j < high; j++) {
+                        setTransitionIndices([i, j]);
+                        await new Promise((resolve) => setTimeout(resolve, 200 - speed * 2));
+                        if (arr[j] < pivot) {
+                            i++;
+                            let temp = arr[i];
+                            arr[i] = arr[j];
+                            arr[j] = temp;
+                            setArray([...arr]);
+                        }
+                    }
+
+                    let temp = arr[i + 1];
+                    arr[i + 1] = arr[high];
+                    arr[high] = temp;
+                    setArray([...arr]);
+
+                    return i + 1;
+                };
+
+                await quickSortHelper(arr, 0, n - 1);
+                setArray(arr);
+                setSortedIndices(Array.from({ length: n }, (_, i) => i));
+                setIsSorting(false);
+            };
+
+            const heapSort = async () => {
+                let arr = [...array];
+                let n = arr.length;
+
+                const heapify = async (arr, n, i) => {
+                    let largest = i;
+                    let left = 2 * i + 1;
+                    let right = 2 * i + 2;
+
+                    if (left < n && arr[left] > arr[largest]) {
+                        largest = left;
+                    }
+
+                    if (right < n && arr[right] > arr[largest]) {
+                        largest = right;
+                    }
+
+                    if (largest !== i) {
+                        let temp = arr[i];
+                        arr[i] = arr[largest];
+                        arr[largest] = temp;
+                        setArray([...arr]);
+                        await heapify(arr, n, largest);
+                    }
+                };
+
+                for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                    await heapify(arr, n, i);
+                }
+
+                for (let i = n - 1; i > 0; i--) {
+                    let temp = arr[0];
+                    arr[0] = arr[i];
+                    arr[i] = temp;
+                    setArray([...arr]);
+                    await heapify(arr, i, 0);
+                }
+
+                setArray(arr);
+                setSortedIndices(Array.from({ length: n }, (_, i) => i));
+                setIsSorting(false);
+            };
+
+            const shellSort = async () => {
+                let arr = [...array];
+                let n = arr.length;
+
+                for (let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)) {
+                    for (let i = gap; i < n; i++) {
+                        let temp = arr[i];
+                        let j;
+                        for (j = i; j >= gap && arr[j - gap] > temp; j -= gap) {
+                            setTransitionIndices([j, j - gap]);
+                            await new Promise((resolve) => setTimeout(resolve, 200 - speed * 2));
+                            arr[j] = arr[j - gap];
+                            setArray([...arr]);
+                        }
+                        arr[j] = temp;
+                        setArray([...arr]);
+                    }
+                }
+
+                setArray(arr);
+                setSortedIndices(Array.from({ length: n }, (_, i) => i));
+                setIsSorting(false);
+            };
+
+            return (
+                <div className={`${isDarkMode ? 'dark-mode' : 'light-mode'} flex flex-col items-center min-h-screen`}>
+                    <header className="w-full p-4 flex items-center justify-between shadow-lg">
+                        <h1 className="text-2xl font-bold">
+                            <i className="fas fa-sort mr-2"></i>
+                            Sorting Algorithms Visualizer
+                        </h1>
+                        <button onClick={toggleDarkMode} className="bg-blue-600 text-white px-4 py-2 rounded">
+                            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                        </button>
+                    </header>
+                    <main className="flex-grow flex items-center justify-center p-4">
+                        <div className="flex items-end space-x-1 max-w-full overflow-x-auto">
+                            {array.map((value, index) => (
+                                <div
+                                    key={index}
+                                    className={`bar ${sortedIndices.includes(index) ? 'bg-green-500' : transitionIndices.includes(index) ? 'bg-orange-500' : 'bg-blue-500'}`}
+                                    style={{ height: `${value}px`, width: `${Math.min(20, 600 / size)}px` }}
+                                ></div>
+                            ))}
+                        </div>
+                    </main>
+                    <footer className="w-full p-4 flex items-center justify-center shadow-lg">
+                        <div className="flex items-center space-x-4">
+                            <button onClick={generateNewArray} className={`bg-blue-600 text-white px-4 py-2 rounded ${isSorting ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={isSorting}>
+                                <i className="fas fa-random mr-2"></i>
+                                New Array
+                            </button>
+                            <div className="flex items-center space-x-2">
+                                <i className="fas fa-sliders-h"></i>
+                                <input type="range" min="10" max="100" value={size} onChange={handleSizeChange} className="w-24" disabled={isSorting} />
+                                <span>Size</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span>Speed:</span>
+                                <input type="range" min="1" max="100" value={speed} onChange={handleSpeedChange} className="w-24" disabled={isSorting && !isPaused} />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span>Algorithm:</span>
+                                <select value={algorithm} onChange={handleAlgorithmChange} className="bg-white rounded px-2 py-1" disabled={isSorting}>
+                                    <option>Bubble Sort</option>
+                                    <option>Selection Sort</option>
+                                    <option>Insertion Sort</option>
+                                    <option>Merge Sort</option>
+                                    <option>Quick Sort</option>
+                                    <option>Heap Sort</option>
+                                    <option>Shell Sort</option>
+                                </select>
+                            </div>
+                            <button onClick={startSorting} className={`bg-blue-600 text-white px-4 py-2 rounded ${isSorting ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={isSorting}>
+                                <i className="fas fa-play mr-2"></i>
+                                Start
+                            </button>
+                            <button onClick={isPaused ? resumeSorting : pauseSorting} className={`bg-blue-600 text-white px-4 py-2 rounded ${!isSorting ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!isSorting}>
+                                <i className={`fas ${isPaused ? 'fa-play' : 'fa-pause'} mr-2`}></i>
+                                {isPaused ? 'Resume' : 'Pause'}
+                            </button>
+                            <button onClick={resetSorting} className="bg-blue-600 text-white px-4 py-2 rounded">
+                                <i className="fas fa-redo mr-2"></i>
+                                Reset
+                            </button>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
